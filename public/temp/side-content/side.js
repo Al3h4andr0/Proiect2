@@ -1,31 +1,30 @@
 import Map from '../map/map.js';
-import {getLocationWithinBound} from '../api/locations.js';
-
 export default class Side {
     constructor (rootElement) {
         if (!rootElement) {
             throw 'rootElement required so we know where we render the element';
         }
         this.rootElement = rootElement;
+        this.locationsIds = [];
     }
 
-    renderOverview(locationOverview) {
+    renderOverview(locationOverview, id) {
         return `
-            <div class="locationOverview">
+            <div class="locationOverview" id="locationReview${id}">
 
             </div>`
     }
 
-    renderContact(locationContact) {
+    renderContact(locationContact, id) {
         return `
-            <div class="locationContact">
+            <div class="locationContact" id="locationReview${id}">
 
             </div>`
     }
 
-    renderReviews(locationReviews) {
+    renderReviews(locationReviews, id) {
         return `
-            <div class="locationReviews">
+            <div class="locationReviews" id="locationReview${id}">
 
             </div>`
     }
@@ -38,11 +37,8 @@ export default class Side {
         `
     }
 
-    async getLocationsInView() {
-        const bound = Map.getLocation();
-        const locations = await (getLocationWithinBound(bound)).locations;
+    renderLocations(locations) {
         let res = '';
-        let idx = 0;
 
         for (let location of locations) {
             res += `
@@ -69,31 +65,45 @@ export default class Side {
                     </div>
                 </div>
                 <div class="locationInfoCnt">
-                    <a class="OvReCo_btn txt_btn" href="#overvieew${idx}">
+                    <a class="OvReCo_btn txt_btn" href="#overvieew${location.id}">
                         Overview
                     </a>
-                    <a class="OvReCo_btn txt_btn" href="#contact${idx}">
+                    <a class="OvReCo_btn txt_btn" href="#contact${location.id}">
                         Contact
                     </a>
-                    <a class="OvReCo_btn txt_btn" href="#reviews${idx}">
+                    <a class="OvReCo_btn txt_btn" href="#reviews${location.id}">
                         Reviews
                     </a>
                 </div>
                 <div class="locationTags>
                     ${this.renderLocationTags(location.tags)}
                 </div>
-                <div class="locationInfo" id="overvieew${idx}">
-                    ${this.renderOverview(location.overview)}
-                    ${this.renderContact(location.contact)}
-                    ${this.renderReviews(location.reviews)}
+                <div class="locationInfo">
+                    ${this.renderOverview(location.overview,location.id)}
+                    ${this.renderContact(location.contact, location.id)}
+                    ${this.renderReviews(location.reviews,location.id)}
                 </div>
             </div>`
         }
-
+        return res;
     }
-    render() {
-        this.rootElement.innerHTML = `<div id="content-wrapper">
-            ${this.getLocationsInView()}
-        </div>`
+
+    removeDuplicates(locations) {
+        return locations.filter(location => {
+            if (this.locationsIds.includes(location.id)) {
+                return false;
+            }
+
+            this.locationsIds.push(location.id);
+            return true;
+        })
+    }
+
+    async render(locations) {
+        let locationsToRender = this.removeDuplicates(locations);
+        if (locationsToRender.length) {
+            let locationsInView = this.renderLocations(locationsToRender);
+            this.rootElement.insertAdjacentHTML('beforeend',`${locationsInView}`);
+        }
     }
 }
