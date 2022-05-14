@@ -1,9 +1,10 @@
 const http = require("http");
+const { url } = require("inspector");
 const static = require('node-static');
 const { getRequestData} = require('./utils/utils');
 /** We want the this as a single tone as it is kinda the database at the moment; can't enforce the pattern in js form one i know so we work with what we have*/
 let Todo = new (require('./controller/todos'))();
-
+let Location = new (require('./controller/locations'))();
 
 const port = 8000;
 const host = 'localhost';
@@ -29,6 +30,7 @@ const safeExec = async (fn, request, response) => {
         response.end(JSON.stringify({ message: e}))
     }
 }
+
 const getAllTodos = async (_, response) => {
     const todos = await Todo.getTodos();
 
@@ -72,10 +74,23 @@ const deleteTodo = async (request, response) => {
     response.end(JSON.stringify(message));
 }
 
+const getAllLocationsWithinBounds = async (request, response) => {
+    let geoLocation = await getRequestData(request);
+    geoLocation = JSON.parse(geoLocation);
+
+    const locations = await Location.getLocation(undefined, geoLocation);
+
+    response.writeHead(200, '200', {'Content-Type': 'application/json'});
+    response.end(JSON.stringify({locations: locations}));
+}
+
 // route listener; routs request to proper processor
 async function requestListener (request, response) {
 
-    if (request.url.match(/\api\/todos\/([0-9]+)/) && request.method === GET) {
+    //Act as Get but I'm lazy to parse URL params so we use POST to be able to have a body
+    if (request.url.match(/\api\/locations\/bound/) && request.method === POST) {
+        safeExec(getAllLocationsWithinBounds, request, response);
+    } else if (request.url.match(/\api\/todos\/([0-9]+)/) && request.method === GET) {
         safeExec(getTodo, request, response);
     } else if (request.url.match(/\api\/todos\/([0-9]+)/) && request.method === PATCH) {
         safeExec(patchTodo, request, response);

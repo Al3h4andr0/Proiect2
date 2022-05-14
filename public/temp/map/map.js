@@ -27,6 +27,13 @@ class Map {
         }
     }
 
+    onMapDragEnd(cb) {
+        let self = this;
+        return (e) => {
+            cb(e, self);
+        }
+    }
+
     renderPrettyPopupDescription (location) {
         return `
         <div class="prettyPopup">
@@ -57,8 +64,13 @@ class Map {
     hookOnMapClick(cb) {
         this.map.on('click', this.onMapClick(cb));
     }
+
     hookOnMapZoomEnd(cb) {
         this.map.on('zoomend', this.onMapZoomEnd(cb));
+    }
+
+    hookOnMapDragEnd(cb) {
+        this.map.on('dragend', this.onMapDragEnd(cb));
     }
 }
 

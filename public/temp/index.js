@@ -23,9 +23,12 @@ function init () {
                 .setContent("You clicked the map at " + e.latlng.toString())
                 .openOn(self.map);
     });
-    Map.hookOnMapZoomEnd(async (e, self) => {
+    Map.hookOnMapZoomEnd((e, self) => {
         onMapStateChange();
     });
+    Map.hookOnMapDragEnd((e, self) => {
+        onMapStateChange();
+    })
 
     Map.init();
     onMapStateChange();
@@ -34,7 +37,7 @@ function init () {
 function showModal(id) {
     switch(id) {
         case 1:
-            
+
     }
 }
 
